@@ -11,9 +11,18 @@ if __name__ == '__main__':
     
     soc.connect(("172.20.10.39", 5000))
 
-    message = "Hello"
-    soc.send(message.encode())
+    alias = "avatar"
+    ip =  "172.20.113.58"
 
-    k = soc.recv(BufferSIZE)
-    print(k)
+    soc.send(alias.encode())
+    soc.send(ip.encode())
+
+    # for i in range(1, 10):
+    #     message = "Hello"
+    #     soc.send(message.encode())
+    #
+    #     k = soc.recv(BufferSIZE)
+    #     print(k)
+
+
 

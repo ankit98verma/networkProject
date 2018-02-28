@@ -2,21 +2,33 @@ from socket import *
 import threading
 import sqlite3
 
+
 BUFFERSIZE = 1024
 
 
-def rec_tcp(conn):
-    data = conn.recv(BUFFERSIZE)
-    print(data.decode())
-    data = conn.recv(BUFFERSIZE)
-    print(data.decode())
+def rec_tcp(conn, addr):
+
+    data  = -1
+    while data != 0:
+        data = conn.recv(BUFFERSIZE)
+        alias = data.decode()
+
+
+        print(alias)
+        ip = addr[0]
+        print(ip)
+    print('Connection Closed')
+
+def processCommands(s):
+    sInd = s.index(' ')
+    comm = s[:sInd]
 
 
 
 def start():
     serverSoc = socket(AF_INET, SOCK_STREAM)
 
-    serverSoc.bind(("172.20.10.39", 5000))
+    serverSoc.bind(("localhost", 5000))
 
     print("Starting server at port 5000")
     while True:
@@ -25,12 +37,13 @@ def start():
         connection, address = serverSoc.accept()
         print("Connected to ", address)
 
-        rec_thread = threading.Thread(target=rec_tcp, args=(connection,))
+        clientThread = threading.Thread(target=rec_tcp, args=(connection, address,))
 
-        rec_thread.start()
+        clientThread.start()
 
         print('Joining Thread')
-        rec_thread.join()
+        clientThread.join()
+
 
     print("Closing Server")
 

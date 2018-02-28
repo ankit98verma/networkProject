@@ -9,14 +9,16 @@ if __name__ == '__main__':
 
     soc = socket(AF_INET, SOCK_STREAM)
     
-    soc.connect(("172.20.10.39", 5000))
-    # soc.connect(("localhost", 5000))
+    # soc.connect(("172.20.10.39", 5000))
+    soc.connect(("localhost", 5000))
 
-    alias = "avatar"
-    ip =  "172.20.113.58"
+    alias = "alias avatar"
+    # ip =  "172.20.113.58"
 
     soc.send(alias.encode())
-    soc.send(ip.encode())
+    k = soc.recv(BufferSIZE)
+    print(k)
+    # soc.send(ip.encode())
 
     soc.close()
     # for i in range(1, 10):

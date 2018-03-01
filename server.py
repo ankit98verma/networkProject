@@ -68,7 +68,9 @@ class Server:
                     else:
                         print('no_success'.encode())
                         conn.send('no_success'.encode())
-
+        q = """ """
+        dbConnection.close()
+        conn.close()
 
 
 

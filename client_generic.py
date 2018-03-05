@@ -7,7 +7,7 @@ class generic_client():
     then co-ordinates activities among other clients in order to transfer and receive files.
     """
 
-    def __init__(self, alias, serverIP='none', serverPort='none'):
+    def __init__(self, alias, serverIP='none', serverPort='none', transmissionPort='none', receptionPort='none'):
         """
         The constructor of the generic class which at the moment takes only the alias name on
         creation and sets it efficiently as a class property
@@ -17,10 +17,34 @@ class generic_client():
         self.BUFFERSIZE = 1024
         self.server_ip = serverIP
         self.server_port = serverPort
+        self.transmission_port = transmissionPort
+        self.reception_port = receptionPort
 
     @property
     def server_ip(self):
         return self._server_ip
+
+    @property
+    def reception_port(self):
+        return self._reception_port
+
+    @property
+    def transmission_port(self):
+        return self._transmission_port
+
+    @transmission_port.setter
+    def transmission_port(self, x):
+        if x is 'none':
+            self._transmission_port = 5000
+        else:
+            self._transmission_port =  x
+
+    @reception_port.setter
+    def reception_port(self, x):
+        if x is 'none':
+            self._reception_port = 5000
+        else:
+            self._reception_port =  x
 
     @server_ip.setter
     def server_ip(self, x):
@@ -57,13 +81,13 @@ class generic_client():
         or not
         :return: true if ID is unique, false if not
         """
-        self.server_socket.send("alias : %s"%self.alias)
+        self.server_socket.send(("alias : %s"%self.alias).encode())
         reply = self.server_socket.recv(self.BUFFERSIZE)
         if reply is 'success':
             print('Successfully set alias name to %s\n'%self.alias)
             return False
         else:
-            print('Alias name is unable to be set, Try again!\n')
+            print('Alias name already exists! Try other alias\n')
             return True
 
     def server_set(self):
@@ -81,3 +105,41 @@ class generic_client():
         while(self.is_alias_unique( )):
             self.alias = input('Enter the alias name: ')
 
+    def login(self):
+        """
+        The function which is actually available for call by the object
+        :return:
+        """
+        self.server_set()
+
+    def client_send_socket(self, ip):
+        """
+        A generic function that creates and returns a socket for TCP comm with a given IP
+        :param ip: The IP to which the file has to be sent
+        :return: socket for the present client to send to a particular IP(connected socket)
+        """
+        client_socket = socket(AF_INET, SOCK_STREAM)
+        client_socket.connect((ip, self.transmission_port))
+        return client_socket
+
+    def tear_socket(self, sock):
+        """
+        Function to tear a socket down formally
+        :param sock: The socket to be torn down
+        :return: void
+        """
+        sock.close()
+
+    def send_file(self, filepath, sock):
+        """
+        The backend code for transmitting file over IIST net
+        :param filepath: the valid filepath
+        :param ip: the ip to which the file is to be sent
+        :return: true if success, false if error
+        """
+        if os.path.isfile(filepath):
+            with open(filepath,'r') as f:
+                l = f.read(self.BUFFERSIZE)
+                sock.send(l.encode())
+        else:
+            print('The given file path does not exist\n')

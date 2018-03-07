@@ -1,2 +1,4 @@
 *.xml
 .idea/
+netProj.db
+__pycache__

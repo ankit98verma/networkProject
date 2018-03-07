@@ -210,22 +210,22 @@ class GenericClient:
         :return: void
         """
         # Code for setting up a connection on server
-        main_server_socket = socket(AF_INET, SOCK_STREAM)
-        main_server_socket.connect((self.server_ip, self.server_port))
-        main_server_socket.send(('mac_id:%s'%str(self.mac_id)).encode())
-        mac_id_reply = (main_server_socket.recv(self.BUFFERSIZE)).decode()
-        mac_id_reply_key = mac_id_reply.split(' ')[0]
-        mac_id_reply_rem = mac_id_reply.split(' ')[1:]
-        if mac_id_reply_key is 'OK':
-            print('Welcone back, you have retained your old ID %s\n'%mac_id_reply_rem[0])
-        else:
-            while True:
-                self.alias = input('Pleas type in your new Alias: ')
-                main_server_socket.send(('alias %s'%self.alias).encode())
-                alias_reply = (main_server_socket.recv(self.BUFFERSIZE)).decode()
-                if alias_reply is'success':
-                    print('The alias name is successfully set to %s\n'%self.alias)
-                    break
+        # main_server_socket = socket(AF_INET, SOCK_STREAM)
+        # main_server_socket.connect((self.server_ip, self.server_port))
+        # main_server_socket.send((json.dumps(self.mac_id)).encode())
+        # mac_id_reply = (main_server_socket.recv(self.BUFFERSIZE)).decode()
+        # mac_id_reply_key = mac_id_reply.split(' ')[0]
+        # mac_id_reply_rem = mac_id_reply.split(' ')[1:]
+        # if mac_id_reply_key is 'OK':
+        #     print('Welcone back, you have retained your old ID %s\n'%mac_id_reply_rem[0])
+        # else:
+        while True:
+            self.alias = input('Pleas type in your new Alias: ')
+            main_server_socket.send(('alias %s'%self.alias).encode())
+            alias_reply = (main_server_socket.recv(self.BUFFERSIZE)).decode()
+            if alias_reply is 'success':
+                print('The alias name is successfully set to %s\n'%self.alias)
+                break
 
         # Setting up transmit and receive sockets
         transmit_socket = socket(AF_INET, SOCK_STREAM)

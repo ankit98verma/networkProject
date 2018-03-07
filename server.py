@@ -9,19 +9,19 @@ class Server:
         self.BUFFERSIZE = 1024
         self.serverSoc = socket(AF_INET, SOCK_STREAM)
         self.serverSoc.bind(("localhost", 5000))
-        self.dbConnection = sqlite3.connect('netProj.db')
-        self.db = self.dbConnection.cursor()
-        self.createTable()
+        # self.createTable()
 
     def createTable(self):
+        dbConnection = sqlite3.connect('netProj.db')
+        db = dbConnection.cursor()
         q = """
         CREATE TABLE onlines (
         alias VARCHAR(100) PRIMARY KEY UNIQUE, 
         ip VARCHAR(100), 
         status INTEGER,
         mac INTEGER UNIQUE);"""
-        self.db.execute(q)
-        self.dbConnection.commit()
+        db.execute(q)
+        dbConnection.commit()
         print('Table created')
 
     def start(self):
@@ -40,8 +40,8 @@ class Server:
             client_thread.join()
 
     def clientHandle(self, conn, addr):
-
-        db = self.dbConnection.cursor()
+        dbConnection = sqlite3.connect('netProj.db')
+        db = dbConnection.cursor()
         recData = conn.recv(self.BUFFERSIZE).decode()
         mac = json.loads(recData)
         q = """SELECT * FROM onlines WHERE mac=?"""
@@ -65,7 +65,7 @@ class Server:
 
             cmd = recData[:recData.index(' ')]
             opData = recData[recData.index(' ')+1:]
-            conn.send(self.handleCommand(cmd, opData, mac, addr))
+            conn.send(self.handleCommand(cmd, opData, mac, addr, db, dbConnection))
         print('Closing Connection')
         q = """SELECT * FROM onlines WHERE ip=?"""
         db.execute(q, (addr[0], ))
@@ -76,20 +76,20 @@ class Server:
             q = """UPDATE onlines SET status=? WHERE ip=?"""
             db.execute(q, (0, addr[0],))
             print("Setting status to 0")
-        self.dbConnection.commit()
-        self.dbConnection.close()
+        dbConnection.commit()
+        dbConnection.close()
         conn.close()
         print('Connection Closed')
 
-    def handleCommand(self, cmd, opData, mac, addr):
+    def handleCommand(self, cmd, opData, mac, addr, db, dbConnection):
         opData = opData.lstrip()
         opData = opData.rstrip()
         if cmd == 'alias':
-            return self.handleALIAS(opData, addr, mac)
+            return self.handleALIAS(opData, addr, mac, db, dbConnection)
         elif cmd == 'isonline':
-            return self.handleISONLINE(opData)
+            return self.handleISONLINE(opData, db, dbConnection)
 
-    def handleALIAS(self, opData, addr, mac):
+    def handleALIAS(self, opData, addr, mac, db, dbConnection):
         ip = addr[0]
 
         try:
@@ -101,18 +101,18 @@ class Server:
             if option == '-rm':
                 a = opData[opData.index(' ')+1:]
                 q = """DELETE FROM onlines WHERE alias = ?"""
-                self.db.execute(q, (a, ))
+                db.execute(q, (a, ))
                 return 'deleted'.encode()
             else:
                 return 'undefined_cmd'.encode()
         else:
             q = """SELECT * FROM onlines WHERE alias=?"""
-            self.db.execute(q, (opData,))
+            db.execute(q, (opData,))
 
-            if len(self.db.fetchall()) == 0:
+            if len(db.fetchall()) == 0:
                 q = """REPLACE INTO onlines (alias, ip, status, mac) VALUES (?, ?, ?, ?)"""
-                self.db.execute(q, (opData, ip, 1, mac))
-                self.dbConnection.commit()
+                db.execute(q, (opData, ip, 1, mac))
+                dbConnection.commit()
                 # conn.send('success'.encode())
                 print('success')
                 return 'success'.encode()
@@ -120,7 +120,7 @@ class Server:
                 print('no_success'.encode())
                 return 'no_success'.encode()
 
-    def handleISONLINE(self, opData):
+    def handleISONLINE(self, opData, db, dbConnection):
         d = dict()
         try:
             index = opData.index(' ')
@@ -141,8 +141,8 @@ class Server:
                 data = opData[:nextIndex]
                 if option == '-a':
                     q = """SELECT * FROM onlines WHERE alias=?"""
-                    self.db.execute(q, (data,))
-                    r = self.db.fetchall()
+                    db.execute(q, (data,))
+                    r = db.fetchall()
                     if len(r) > 0:
                         row = r[0]
                         if len(r) == 0:
@@ -153,8 +153,8 @@ class Server:
                         break
                 elif option == '-ip':
                     q = """SELECT * FROM onlines WHERE ip=?"""
-                    self.db.execute(q, (data,))
-                    r = self.db.fetchall()
+                    db.execute(q, (data,))
+                    r = db.fetchall()
                     if len(r) > 0:
                         row = r[0]
                         if len(r) == 0:
@@ -167,8 +167,8 @@ class Server:
         else:
             if opData == '-all':
                 q = """SELECT * FROM onlines"""
-                self.db.execute(q)
-                r = self.db.fetchall()
+                db.execute(q)
+                r = db.fetchall()
                 if len(r) != 0:
                     for row in r:
                         d[row[0]] = (row[1], row[2])

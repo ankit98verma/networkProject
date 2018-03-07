@@ -87,11 +87,11 @@ class GenericClient:
         :param arguements: The arguements user entered
         :return:
         """
-        query = dict( )
-        query['command'] = command
+        # query = dict( )
+        # query['command'] = command
         # query['arguemets'] = arguements
-        json_q = json.dumps(query)
-        sock.send(json_q.encode())
+        # json_q = json.dumps(query)
+        sock.send(command.encode())
 
         received_json = sock.recv(self.BUFFERSIZE)
         received_dict = json.loads(received_json)

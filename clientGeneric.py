@@ -115,9 +115,8 @@ class GenericClient:
             sock.listen(1)
             connection, address = sock.accept()
             print('$$ A connection has been successfully established to yur node from %s\n'%address)
-
             request = (connection.recv(self.BUFFERSIZE)).decode()
-            if request.split(':')[0] is 'fetch':
+            if request.split(':')[0] == 'fetch':
                 file_path = request.split(':')[1]
                 permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
                 if permission in ['Y', 'y']:
@@ -125,7 +124,7 @@ class GenericClient:
                         connection.send('yes'.encode())
                         with open(file_path,'r') as f:
                             for l in f.read():
-                                connection.send(l.encode())
+                                connection.send(l)
                         f.close()
                     elif os.path.isfile(os.path.join(os.path.expanduser('~/Documents'),file_path)):
                         file_path = os.path.join(os.path.expanduser('~/Documents'),file_path)
@@ -140,6 +139,8 @@ class GenericClient:
                         connection.send('NF'.encode())
                 else:
                     connection.send('DENIED'.encode())
+            else:
+                connection.send('UC'.encode())
 
             response = input('$$ File successfully sent. Do you wish to end reception (Y|N) : ')
             connection.close()
@@ -155,19 +156,22 @@ class GenericClient:
         :param file_name: the file to fetch
         :return:
         """
+        print('$$ Now connecting to IP : %s on Port : %s\n'%(ip_alias,PORT))
         sock.connect((ip_alias, PORT))
+        print('$$ Connected\n')
         sock.send(('fetch:%s'%file_name).encode())
+        print('$$ Requesting file\n')
         reply = (sock.recv(self.BUFFERSIZE)).decode()
-        if reply is 'yes':
+        if reply == 'yes':
             with open(file_name, 'wb') as f:
-                l = (sock.recv(self.BUFFERSIZE)).decode()
-                while l is not 'ENDOFFILE':
+                l = (sock.recv(self.BUFFERSIZE))
+                while l != 'ENDOFFILE':
                     f.write(l)
-                    l = (sock.recv(self.BUFFERSIZE)).decode()
+                    l = (sock.recv(self.BUFFERSIZE))
             f.close()
-        elif reply is 'DENIED':
+        elif reply == 'DENIED':
             print('$$ Permission Denied\n')
-        elif reply is 'NF':
+        elif reply == 'NF':
             print('$$ File Not Found\n')
         else:
             print('$$ Unknown Response from Client\n')

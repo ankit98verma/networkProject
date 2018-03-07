@@ -114,37 +114,36 @@ class GenericClient:
             connection, address = sock.accept()
             print('$$ A connection has been successfully established to yur node from %s\n'%address)
 
-            request = (sock.recv(self.BUFFERSIZE)).decode()
+            request = (connection.recv(self.BUFFERSIZE)).decode()
             if request.split(':')[0] is 'fetch':
                 file_path = request.split(':')[1]
                 permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
                 if permission in ['Y', 'y']:
                     if os.path.isfile(file_path):
-                        sock.send('yes'.encode())
+                        connection.send('yes'.encode())
                         with open(file_path,'r') as f:
                             for l in f.read():
-                                sock.send(l.encode())
+                                connection.send(l.encode())
                         f.close()
                     elif os.path.isfile(os.path.join(os.path.expanduser('~/Documents'),file_path)):
                         file_path = os.path.join(os.path.expanduser('~/Documents'),file_path)
-                        sock.send('yes'.encode())
+                        connection.send('yes'.encode())
                         with open(file_path,'r') as f:
                             for l in f.read():
-                                sock.send(l.encode())
+                                connection.send(l.encode())
                         f.close()
-                        sock.send('ENDOFFILE'.encode())
+                        connection.send('ENDOFFILE'.encode())
                     else:
                         print('$$ File not Found on your machine\n')
-                        sock.send('NF'.encode())
+                        connection.send('NF'.encode())
                 else:
-                    sock.send('DENIED'.encode())
+                    connection.send('DENIED'.encode())
 
             response = input('$$ File successfully sent. Do you wish to end reception (Y|N) : ')
+            connection.close()
             if response in ['Y', 'y']:
                 print('$$ Tearing Down the socket\n')
-                # TODO : Disconnect the socket Ankit! Such that it will be reusable
-
-
+                sock.shutdown()
 
     def getf(self, sock, ip_alias, file_name, PORT=5000):
         """
@@ -170,7 +169,8 @@ class GenericClient:
             print('$$ File Not Found\n')
         else:
             print('$$ Unknown Response from Client\n')
-        # TODO : Free the socket, i.e. disconnect it So it can be reused
+        # Free the socket, i.e. disconnect it So it can be reused
+        sock.shutdown()
 
     def console(self, main_server_socket, transmit_sock):
         """
@@ -241,3 +241,6 @@ class GenericClient:
 
         receive_thread.join()
         console_thread.join()
+
+        transmit_socket.close()
+        receive_socket.close()

@@ -110,7 +110,7 @@ class GenericClient:
         """
         response = 'N'
         while response not in ['Y', 'y']:
-            sock.listen(1)
+            sock.listen(10)
             connection, address = sock.accept()
             print('$$ A connection has been successfully established to yur node from %s\n'%address)
 

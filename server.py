@@ -11,7 +11,7 @@ class Server:
         self.serverSoc.bind(("localhost", 5000))
         self.dbConnection = sqlite3.connect('netProj.db')
         self.db = self.dbConnection.cursor()
-        self.createTable()
+        # self.createTable()
 
     def createTable(self):
         q = """

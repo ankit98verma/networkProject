@@ -210,8 +210,8 @@ class GenericClient:
         :return: void
         """
         # Code for setting up a connection on server
-        # main_server_socket = socket(AF_INET, SOCK_STREAM)
-        # main_server_socket.connect((self.server_ip, self.server_port))
+        main_server_socket = socket(AF_INET, SOCK_STREAM)
+        main_server_socket.connect((self.server_ip, self.server_port))
         # main_server_socket.send((json.dumps(self.mac_id)).encode())
         # mac_id_reply = (main_server_socket.recv(self.BUFFERSIZE)).decode()
         # mac_id_reply_key = mac_id_reply.split(' ')[0]

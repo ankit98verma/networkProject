@@ -180,22 +180,22 @@ class GenericClient:
         while True:
             inp = input('$$ ')
 
-            if inp is 'exit':
+            if inp == 'exit':
                 print('$$ Now initiating END\n')
                 break
-            elif inp.split(' ')[0] is 'isonline':
-                if inp.split(' ')[1] is '-p':
+            elif inp.split(' ')[0] == 'isonline':
+                if inp.split(' ')[1] == '-p':
                     print('$$ Fetching status of %s \n'%inp.split(' ')[2])
                     self.server_query(main_server_socket, inp)
-                elif inp.split(' ')[1] is '-A':
+                elif inp.split(' ')[1] == '-all':
                     print('$$ Fetching list of all Online\n')
                     self.server_query(main_server_socket, inp)
-                elif inp.split(' ')[1] is '-a':
+                elif inp.split(' ')[1] == '-a':
                     print('$$ Fetching status of %s \n'%inp.split(' ')[2])
                     self.server_query(main_server_socket, inp)
                 else:
                     print('$$ Acceptable arguements with isonline are -p -a -A\n')
-            elif inp.split(' ')[0] is 'getf':
+            elif inp.split(' ')[0] == 'getf':
                 ip_alias = inp.split(' ')[1]
                 file_name = inp.split(' ')[2]
                 PORT = int(input('$$ Enter the port you will communicate on\n'))
@@ -221,9 +221,9 @@ class GenericClient:
         # else:
         while True:
             self.alias = input('Pleas type in your new Alias: ')
-            main_server_socket.send(('alias %s'%self.alias).encode())
+            main_server_socket.send(('alias %s'%(self.alias)).encode())
             alias_reply = (main_server_socket.recv(self.BUFFERSIZE)).decode()
-            if alias_reply is 'success':
+            if alias_reply == 'success':
                 print('The alias name is successfully set to %s\n'%self.alias)
                 break
 
@@ -232,7 +232,7 @@ class GenericClient:
         receive_socket = socket(AF_INET, SOCK_STREAM)
 
         # Run a thread that looks for incoming connections and processes the commands that comes
-        receive_thread = threading.Thread(target= self.reception, args=(receive_socket, transmit_socket,))
+        receive_thread = threading.Thread(target= self.reception, args=(receive_socket,))
         receive_thread.start()
 
         # Running a Console on another thread

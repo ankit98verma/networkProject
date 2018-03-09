@@ -93,14 +93,16 @@ class GenericClient:
         # json_q = json.dumps(query)
         sock.send(command.encode())
 
-        received_json = sock.recv(self.BUFFERSIZE)
-        received_dict = json.loads(received_json)
-
-        if received_dict['return'] is 'success':
-            for entry in received_dict['data']:
-                print('$$ %s'%str(entry))
-        else:
-            print('$$ Query Failed! Try again\n')
+        received_json = (sock.recv(self.BUFFERSIZE)).decode()
+        # received_dict = json.loads(received_json)
+        print(received_json)
+        # if received_dict['return'] is 'success':
+        #     for entry in received_dict['data']:
+        #         print('$$ %s'%str(entry))
+        # else:
+        #     print('$$ Query Failed! Try again\n')
+        # for key in received_dict:
+        #     print(key+' - '+received_dict[key])
 
     def reception(self, sock):
         """

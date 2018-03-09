@@ -9,7 +9,7 @@ class Server:
         self.BUFFERSIZE = 1024
         self.serverSoc = socket(AF_INET, SOCK_STREAM)
         self.port = port
-        self.serverSoc.bind(("172.20.113.190", self.port))
+        self.serverSoc.bind(("localhost", self.port))
         # self.createTabSSle()
 
     def createTable(self):
@@ -27,18 +27,22 @@ class Server:
 
     def start(self):
         print("Starting server at port "+str(self.port))
-        while True:
-            self.serverSoc.listen(10)
+        listenThread = threading.Thread(target=self.listen(), args=())
 
-            connection, address = self.serverSoc.accept()
-            print("Connected to ", address)
+        listenThread.join()
 
-            client_thread = threading.Thread(target=self.clientHandle, args=(connection, address,))
+    def listen(self):
+        self.serverSoc.listen(10)
 
-            client_thread.start()
+        connection, address = self.serverSoc.accept()
+        print("Connected to ", address)
 
-            print('Joining Thread')
-            client_thread.join()
+        client_thread = threading.Thread(target=self.clientHandle, args=(connection, address,))
+
+        client_thread.start()
+
+        print('Joining Thread')
+        client_thread.join()
 
     def clientHandle(self, conn, addr):
         dbConnection = sqlite3.connect('netProj.db')
@@ -179,16 +183,7 @@ class Server:
         print('Data Sent')
         return tosend.encode()
 
-def create_server(port):
-    s = Server(port)
-    s.start()
 
 if __name__ == '__main__':
-    thread_sam = threading.Thread(target=create_server, args=(6000,))
-    thread_reuben = threading.Thread(target=create_server, args=(6001,))
-
-    thread_sam.start()
-    thread_reuben.start()
-
-    thread_sam.join()
-    thread_reuben.join()
+    s = Server(5000)
+    s.start()

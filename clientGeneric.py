@@ -110,14 +110,20 @@ class GenericClient:
         :param sock: The socket which communicates and looks for reception
         :return:
         """
-        response = 'N'
-        while response not in ['Y', 'y']:
-            sock.listen(10)
+        flag = 'first'
+        while True:
+            # ip = input('Type your current IP: ')
+            if flag == 'first':
+                receive_port = int(input('What port you wanna receive on: '))
+                sock.bind(('172.20.113.190', receive_port))
+                print('$$ IP bound successfully\n')
+                flag = 'second'
+            sock.listen(1)
+            print('$$ Started Listening\n')
             connection, address = sock.accept()
-            print('$$ A connection has been successfully established to yur node from %s\n'%address)
-
+            print('$$ A connection has been successfully established to yur node from '+str(address)+'\n')
             request = (connection.recv(self.BUFFERSIZE)).decode()
-            if request.split(':')[0] is 'fetch':
+            if request.split(':')[0] == 'fetch':
                 file_path = request.split(':')[1]
                 permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
                 if permission in ['Y', 'y']:
@@ -140,12 +146,15 @@ class GenericClient:
                         connection.send('NF'.encode())
                 else:
                     connection.send('DENIED'.encode())
+            else:
+                connection.send('UC'.encode())
 
             response = input('$$ File successfully sent. Do you wish to end reception (Y|N) : ')
             connection.close()
             if response in ['Y', 'y']:
                 print('$$ Tearing Down the socket\n')
-                sock.shutdown()
+                break
+                # sock.close()
 
     def getf(self, sock, ip_alias, file_name, PORT=5000):
         """
@@ -155,26 +164,29 @@ class GenericClient:
         :param file_name: the file to fetch
         :return:
         """
+        print('$$ Now connecting to IP : %s on Port : %s\n'%(ip_alias,PORT))
         sock.connect((ip_alias, PORT))
+        print('$$ Connected\n')
         sock.send(('fetch:%s'%file_name).encode())
+        print('$$ Requesting file\n')
         reply = (sock.recv(self.BUFFERSIZE)).decode()
-        if reply is 'yes':
+        if reply == 'yes':
             with open(file_name, 'wb') as f:
                 l = (sock.recv(self.BUFFERSIZE)).decode()
-                while l is not 'ENDOFFILE':
-                    f.write(l)
+                while l not in ['ENDOFFILE']:
+                    f.write(l.encode())
                     l = (sock.recv(self.BUFFERSIZE)).decode()
             f.close()
-        elif reply is 'DENIED':
+        elif reply == 'DENIED':
             print('$$ Permission Denied\n')
-        elif reply is 'NF':
+        elif reply == 'NF':
             print('$$ File Not Found\n')
         else:
             print('$$ Unknown Response from Client\n')
         # Free the socket, i.e. disconnect it So it can be reused
-        sock.shutdown()
+        sock.close()
 
-    def console(self, main_server_socket, transmit_sock):
+    def console(self, main_server_socket):
         """
         The function which runs the console on the client machine
         :return:
@@ -201,7 +213,7 @@ class GenericClient:
                 ip_alias = inp.split(' ')[1]
                 file_name = inp.split(' ')[2]
                 PORT = int(input('$$ Enter the port you will communicate on\n'))
-                self.getf(transmit_sock, ip_alias, file_name, PORT)
+                self.getf(socket(AF_INET, SOCK_STREAM), ip_alias, file_name, PORT)
             else:
                 print('$$ Invalid command! Try again\n')
 
@@ -228,7 +240,7 @@ class GenericClient:
             print('Welcone back, you have retained your old ID %s\n' % mac_id_reply)
 
         # Setting up transmit and receive sockets
-        transmit_socket = socket(AF_INET, SOCK_STREAM)
+        # transmit_socket = socket(AF_INET, SOCK_STREAM)
         receive_socket = socket(AF_INET, SOCK_STREAM)
 
         # Run a thread that looks for incoming connections and processes the commands that comes
@@ -236,11 +248,11 @@ class GenericClient:
         receive_thread.start()
 
         # Running a Console on another thread
-        console_thread = threading.Thread(target=self.console, args=(main_server_socket, transmit_socket,))
+        console_thread = threading.Thread(target=self.console, args=(main_server_socket,))
         console_thread.start()
 
         receive_thread.join()
         console_thread.join()
 
-        transmit_socket.close()
+        # transmit_socket.close()
         receive_socket.close()

@@ -5,11 +5,12 @@ import json
 
 class Server:
 
-    def __init__(self):
+    def __init__(self, port):
         self.BUFFERSIZE = 1024
         self.serverSoc = socket(AF_INET, SOCK_STREAM)
-        self.serverSoc.bind(("localhost", 5000))
-        # self.createTable()
+        self.port = port
+        self.serverSoc.bind(("172.20.113.190", self.port))
+        # self.createTabSSle()
 
     def createTable(self):
         dbConnection = sqlite3.connect('netProj.db')
@@ -25,7 +26,7 @@ class Server:
         print('Table created')
 
     def start(self):
-        print("Starting server at port 5000")
+        print("Starting server at port "+str(self.port))
         while True:
             self.serverSoc.listen(10)
 
@@ -178,6 +179,16 @@ class Server:
         print('Data Sent')
         return tosend.encode()
 
-if __name__ == '__main__':
-    s = Server()
+def create_server(port):
+    s = Server(port)
     s.start()
+
+if __name__ == '__main__':
+    thread_sam = threading.Thread(target=create_server, args=(6000,))
+    thread_reuben = threading.Thread(target=create_server, args=(6001,))
+
+    thread_sam.start()
+    thread_reuben.start()
+
+    thread_sam.join()
+    thread_reuben.join()

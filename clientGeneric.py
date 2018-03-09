@@ -52,7 +52,7 @@ class GenericClient:
     @server_ip.setter
     def server_ip(self, x):
         if x is 'none':
-            self._server_ip = '172.20.113.43'
+            self._server_ip = 'localhost'
         else:
             self._server_ip = x
 

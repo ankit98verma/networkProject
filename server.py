@@ -10,7 +10,8 @@ class Server:
         self.serverSoc = socket(AF_INET, SOCK_STREAM)
         self.port = port
         self.serverSoc.bind(("localhost", self.port))
-        # self.createTabSSle()
+        self.thread = []
+        # self.createTable()
 
     def createTable(self):
         dbConnection = sqlite3.connect('netProj.db')
@@ -28,21 +29,20 @@ class Server:
     def start(self):
         print("Starting server at port "+str(self.port))
         listenThread = threading.Thread(target=self.listen(), args=())
-
-        listenThread.join()
+        listenThread.start()
+        self.thread.append(listenThread)
 
     def listen(self):
-        self.serverSoc.listen(10)
+        while True:
+            self.serverSoc.listen(10)
+            print("listening")
+            connection, address = self.serverSoc.accept()
+            print("Connected to ", address)
 
-        connection, address = self.serverSoc.accept()
-        print("Connected to ", address)
+            client_thread = threading.Thread(target=self.clientHandle, args=(connection, address,))
 
-        client_thread = threading.Thread(target=self.clientHandle, args=(connection, address,))
-
-        client_thread.start()
-
-        print('Joining Thread')
-        client_thread.join()
+            self.thread.append(client_thread)
+            client_thread.start()
 
     def clientHandle(self, conn, addr):
         dbConnection = sqlite3.connect('netProj.db')
@@ -58,9 +58,12 @@ class Server:
             d = r[0]
             d = json.dumps(d[3])
             conn.send(d.encode())
+            print("Alias sent")
 
         while True:
+            print("Listening for client")
             recData = conn.recv(self.BUFFERSIZE)
+            print("got data from client")
             recData = recData.lstrip()
             recData = recData.rstrip()
             if len(recData) == 0:
@@ -187,3 +190,5 @@ class Server:
 if __name__ == '__main__':
     s = Server(5000)
     s.start()
+    for t in s.thread:
+        t.join()

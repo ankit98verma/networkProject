@@ -187,10 +187,13 @@ class GenericClient:
                     file_path = root.filename
                     root.destroy()
                     if os.path.isfile(file_path):
-                        connection.send('yes'.encode())
-                        with open(file_path,'r') as f:
-                            for l in f.read():
-                                connection.send(l.encode())
+                        connection.send(('yes:'+str(os.path.getsize(file_path))).encode())
+                        with open(file_path,'rb') as f:
+                            bytes_to_send = f.read(self.BUFFERSIZE)
+                            connection.send(bytes_to_send)
+                            while bytes_to_send != '':
+                                bytes_to_send = f.read(self.BUFFERSIZE)
+                                connection.send(bytes_to_send)
                         f.close()
                     else:
                         print('$$ File not Found on your machine\n')
@@ -221,12 +224,20 @@ class GenericClient:
         sock.send(('fetch:%s'%file_name).encode())
         print('$$ Requesting file\n')
         reply = (sock.recv(self.BUFFERSIZE)).decode()
-        if reply == 'yes':
+        reply = reply.split(':')
+        if reply[0] == 'yes':
+            file_size = int(reply[1])
+            print('Receiving FILE of Size '+str(file_size)+'\n')
             with open(file_name, 'wb') as f:
-                l = (sock.recv(self.BUFFERSIZE)).decode()
-                while l not in ['ENDOFFILE']:
-                    f.write(l.encode())
-                    l = (sock.recv(self.BUFFERSIZE)).decode()
+                data = sock.recv(self.BUFFERSIZE)
+                total_received = len(data)
+                f.write(data)
+                while total_received<file_size:
+                    data = sock.recv(self.BUFFERSIZE)
+                    total_received += len(data)
+                    f.write(data)
+                    print("{0:.2f}".format((total_received/float(file_size))*100)+" % downloaded\n")
+                print("Download Complete\n")
             f.close()
         elif reply == 'DENIED':
             print('$$ Permission Denied\n')

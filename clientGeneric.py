@@ -24,10 +24,15 @@ class GenericClient:
         self.transmission_port = transmissionPort
         self.reception_port = receptionPort
         self.mac_id = get_mac()
+        self.isrunning = True
 
     @property
     def server_ip(self):
         return self._server_ip
+
+    @property
+    def isrunning(self):
+        return self._isRunning
 
     @property
     def reception_port(self):
@@ -36,6 +41,14 @@ class GenericClient:
     @property
     def transmission_port(self):
         return self._transmission_port
+
+    @isrunning.setter
+    def isrunning(self, x):
+        if type(x) is bool:
+            self._isRunning = x
+        else:
+            self._isRunning = True
+
 
     @transmission_port.setter
     def transmission_port(self, x):
@@ -166,9 +179,9 @@ class GenericClient:
         :return:
         """
         flag = 'first'
-        while True:
-            ip = input('Type your current IP: ')
+        while self.isrunning:
             if flag == 'first':
+                ip = input('Type your current IP: ')
                 receive_port = int(input('What port you wanna receive on: '))
                 sock.bind((ip, receive_port))
                 print('$$ IP bound successfully\n')
@@ -188,12 +201,15 @@ class GenericClient:
                     root.destroy()
                     if os.path.isfile(file_path):
                         connection.send(('yes:'+str(os.path.getsize(file_path))).encode())
+                        file_size = os.path.getsize(file_path)
                         with open(file_path,'rb') as f:
                             bytes_to_send = f.read(self.BUFFERSIZE)
                             connection.send(bytes_to_send)
-                            while bytes_to_send != '':
+                            bytes_sent = len(bytes_to_send)
+                            while bytes_sent<file_size:
                                 bytes_to_send = f.read(self.BUFFERSIZE)
                                 connection.send(bytes_to_send)
+                                bytes_sent += len(bytes_to_send)
                         f.close()
                     else:
                         print('$$ File not Found on your machine\n')
@@ -203,12 +219,7 @@ class GenericClient:
             else:
                 connection.send('UC'.encode())
 
-            response = input('$$ File successfully sent. Do you wish to end reception (Y|N) : ')
-            connection.close()
-            if response in ['Y', 'y']:
-                print('$$ Tearing Down the socket\n')
-                break
-                # sock.close()
+
 
     def getf(self, sock, ip_alias, file_name, PORT=5000):
         """
@@ -255,9 +266,9 @@ class GenericClient:
         """
         while True:
             inp = input('$$ ')
-
             if inp == 'exit':
                 print('$$ Now initiating END\n')
+                self.isrunning = False
                 break
             elif inp.split(' ')[0] == 'isonline':
                 if inp.split(' ')[1] == '-p':
@@ -270,12 +281,13 @@ class GenericClient:
                     print('$$ Fetching status of %s \n'%inp.split(' ')[2])
                     self.server_query(main_server_socket, inp)
                 else:
-                    print('$$ Acceptable arguements with isonline are -p -a -A\n')
+                    print('$$ Acceptable arguements with isonline are -p -a -all\n')
             elif inp.split(' ')[0] == 'getf':
-                ip_alias = inp.split(' ')[1]
-                file_name = inp.split(' ')[2]
-                PORT = int(input('$$ Enter the port you will communicate on\n'))
-                self.getf(socket(AF_INET, SOCK_STREAM), ip_alias, file_name, PORT)
+                if len(inp.split(' ')) is 3:
+                    ip_alias = inp.split(' ')[1]
+                    file_name = inp.split(' ')[2]
+                    PORT = int(input('$$ Enter the port you wish to communicate with on the remote machine\n'))
+                    self.getf(socket(AF_INET, SOCK_STREAM), ip_alias, file_name, PORT)
             else:
                 print('$$ Invalid command! Try again\n')
 
@@ -306,11 +318,12 @@ class GenericClient:
         receive_socket = socket(AF_INET, SOCK_STREAM)
 
         # Run a thread that looks for incoming connections and processes the commands that comes
+        self.isrunning = True
         receive_thread = threading.Thread(target= self.reception, args=(receive_socket,))
         receive_thread.start()
 
         # Running a Console on another thread
-        console_thread = threading.Thread(target=self.console, args=(main_server_socket,))
+        console_thread = threading.Thread(target=self.console, args=(main_server_socket, ))
         console_thread.start()
 
         receive_thread.join()
@@ -318,3 +331,4 @@ class GenericClient:
 
         # transmit_socket.close()
         receive_socket.close()
+        print('Thank you for using Jaggery!\n')

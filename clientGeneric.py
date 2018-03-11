@@ -3,6 +3,8 @@ from uuid import getnode as get_mac
 import threading
 import json
 import os
+from tkinter import filedialog
+from tkinter import *
 
 class GenericClient:
     """
@@ -104,6 +106,59 @@ class GenericClient:
         # for key in received_dict:
         #     print(key+' - '+received_dict[key])
 
+    # def reception(self, sock):
+    #     """
+    #     The function handling reception
+    #     :param sock: The socket which communicates and looks for reception
+    #     :return:
+    #     """
+    #     flag = 'first'
+    #     while True:
+    #         # ip = input('Type your current IP: ')
+    #         if flag == 'first':
+    #             receive_port = int(input('What port you wanna receive on: '))
+    #             sock.bind(('172.20.113.190', receive_port))
+    #             print('$$ IP bound successfully\n')
+    #             flag = 'second'
+    #         sock.listen(1)
+    #         print('$$ Started Listening\n')
+    #         connection, address = sock.accept()
+    #         print('$$ A connection has been successfully established to yur node from '+str(address)+'\n')
+    #         request = (connection.recv(self.BUFFERSIZE)).decode()
+    #         if request.split(':')[0] == 'fetch':
+    #             file_path = request.split(':')[1]
+    #             permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
+    #             if permission in ['Y', 'y']:
+    #                 if os.path.isfile(file_path):
+    #                     connection.send('yes'.encode())
+    #                     with open(file_path,'r') as f:
+    #                         for l in f.read():
+    #                             connection.send(l.encode())
+    #                     f.close()
+    #                 elif os.path.isfile(os.path.join(os.path.expanduser('~/Documents'),file_path)):
+    #                     file_path = os.path.join(os.path.expanduser('~/Documents'),file_path)
+    #                     connection.send('yes'.encode())
+    #                     with open(file_path,'r') as f:
+    #                         for l in f.read():
+    #                             connection.send(l.encode())
+    #                     f.close()
+    #                     connection.send('ENDOFFILE'.encode())
+    #                 else:
+    #                     print('$$ File not Found on your machine\n')
+    #                     connection.send('NF'.encode())
+    #             else:
+    #                 connection.send('DENIED'.encode())
+    #         else:
+    #             connection.send('UC'.encode())
+    #
+    #         response = input('$$ File successfully sent. Do you wish to end reception (Y|N) : ')
+    #         connection.close()
+    #         if response in ['Y', 'y']:
+    #             print('$$ Tearing Down the socket\n')
+    #             break
+    #             # sock.close()
+    #             #
+
     def reception(self, sock):
         """
         The function handling reception
@@ -112,10 +167,10 @@ class GenericClient:
         """
         flag = 'first'
         while True:
-            # ip = input('Type your current IP: ')
+            ip = input('Type your current IP: ')
             if flag == 'first':
                 receive_port = int(input('What port you wanna receive on: '))
-                sock.bind(('172.20.113.190', receive_port))
+                sock.bind((ip, receive_port))
                 print('$$ IP bound successfully\n')
                 flag = 'second'
             sock.listen(1)
@@ -127,20 +182,16 @@ class GenericClient:
                 file_path = request.split(':')[1]
                 permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
                 if permission in ['Y', 'y']:
+                    root = Tk()
+                    root.filename = filedialog.askopenfilename(initialdir=os.path.expanduser('~/'), title='Select file')
+                    file_path = root.filename
+                    root.destroy()
                     if os.path.isfile(file_path):
                         connection.send('yes'.encode())
                         with open(file_path,'r') as f:
                             for l in f.read():
                                 connection.send(l.encode())
                         f.close()
-                    elif os.path.isfile(os.path.join(os.path.expanduser('~/Documents'),file_path)):
-                        file_path = os.path.join(os.path.expanduser('~/Documents'),file_path)
-                        connection.send('yes'.encode())
-                        with open(file_path,'r') as f:
-                            for l in f.read():
-                                connection.send(l.encode())
-                        f.close()
-                        connection.send('ENDOFFILE'.encode())
                     else:
                         print('$$ File not Found on your machine\n')
                         connection.send('NF'.encode())

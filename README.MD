@@ -1,7 +1,7 @@
 # Project Jaggery
 
 This project is aimed at making the process of file sharing hassle free, saving data bandwidth by using a layer inside 
-the local network than the superficial network in a group of huge computers. By accomplishing the above objectives we 
+the local network rather than the superficial network in a group of huge computers. By accomplishing the above objectives, we 
 also get data security, i.e. data is not exposed to other people on the Internet as the pathing is apt and importantly
 less time consuming. Also you wont need pen-drives, hard disks for sharing files!
 

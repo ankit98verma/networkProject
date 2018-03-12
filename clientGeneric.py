@@ -180,7 +180,7 @@ class GenericClient:
         """
         while self.isrunning:
             try:
-                sock.settimeout(30)
+                # sock.settimeout(30)
                 sock.listen(1)
                 print('$$ Started Listening\n')
                 connection, address = sock.accept()

@@ -178,46 +178,46 @@ class GenericClient:
         :param sock: The socket which communicates and looks for reception
         :return:
         """
-        flag = 'first'
         while self.isrunning:
-            if flag == 'first':
-                ip = input('Type your current IP: ')
-                receive_port = int(input('What port you wanna receive on: '))
-                sock.bind((ip, receive_port))
-                print('$$ IP bound successfully\n')
-                flag = 'second'
-            sock.listen(1)
-            print('$$ Started Listening\n')
-            connection, address = sock.accept()
-            print('$$ A connection has been successfully established to yur node from '+str(address)+'\n')
-            request = (connection.recv(self.BUFFERSIZE)).decode()
-            if request.split(':')[0] == 'fetch':
-                file_path = request.split(':')[1]
-                permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
-                if permission in ['Y', 'y']:
-                    root = Tk()
-                    root.filename = filedialog.askopenfilename(initialdir=os.path.expanduser('~/'), title='Select file')
-                    file_path = root.filename
-                    root.destroy()
-                    if os.path.isfile(file_path):
-                        connection.send(('yes:'+str(os.path.getsize(file_path))).encode())
-                        file_size = os.path.getsize(file_path)
-                        with open(file_path,'rb') as f:
-                            bytes_to_send = f.read(self.BUFFERSIZE)
-                            connection.send(bytes_to_send)
-                            bytes_sent = len(bytes_to_send)
-                            while bytes_sent<file_size:
+            try:
+                sock.settimeout(30)
+                sock.listen(1)
+                print('$$ Started Listening\n')
+                connection, address = sock.accept()
+            except socket.timeout:
+                pass
+            except:
+                raise
+            else:
+                print('$$ A connection has been successfully established to yur node from '+str(address)+'\n')
+                request = (connection.recv(self.BUFFERSIZE)).decode()
+                if request.split(':')[0] == 'fetch':
+                    file_path = request.split(':')[1]
+                    permission = input('$$ %s has requested %s from you. Y/N : '%(address, file_path))
+                    if permission in ['Y', 'y']:
+                        root = Tk()
+                        root.filename = filedialog.askopenfilename(initialdir=os.path.expanduser('~/'), title='Select file')
+                        file_path = root.filename
+                        root.destroy()
+                        if os.path.isfile(file_path):
+                            connection.send(('yes:'+str(os.path.getsize(file_path))).encode())
+                            file_size = os.path.getsize(file_path)
+                            with open(file_path,'rb') as f:
                                 bytes_to_send = f.read(self.BUFFERSIZE)
                                 connection.send(bytes_to_send)
-                                bytes_sent += len(bytes_to_send)
-                        f.close()
+                                bytes_sent = len(bytes_to_send)
+                                while bytes_sent<file_size:
+                                    bytes_to_send = f.read(self.BUFFERSIZE)
+                                    connection.send(bytes_to_send)
+                                    bytes_sent += len(bytes_to_send)
+                            f.close()
+                        else:
+                            print('$$ File not Found on your machine\n')
+                            connection.send('NF'.encode())
                     else:
-                        print('$$ File not Found on your machine\n')
-                        connection.send('NF'.encode())
+                        connection.send('DENIED'.encode())
                 else:
-                    connection.send('DENIED'.encode())
-            else:
-                connection.send('UC'.encode())
+                    connection.send('UC'.encode())
 
 
 
@@ -268,6 +268,7 @@ class GenericClient:
             inp = input('$$ ')
             if inp == 'exit':
                 print('$$ Now initiating END\n')
+                print('$$ 30 seconds to END\n')
                 self.isrunning = False
                 break
             elif inp.split(' ')[0] == 'isonline':
@@ -291,6 +292,31 @@ class GenericClient:
             else:
                 print('$$ Invalid command! Try again\n')
 
+    def welcome(self):
+        """
+        Standard welcome function
+        :return: void
+        """
+        print("************************************************************\n")
+        print("                          Welcome                           \n")
+        print("                            to                              \n")
+        print("                          Jaggery                           \n")
+        print("____________________________________________________________\n")
+        print("           Developers - Ankit Verma, Samvram Sahu           \n")
+        print("************************************************************\n")
+
+    def aftermath(self):
+        """
+        THe ending
+        :return:
+        """
+        print("************************************************************\n")
+        print("                        Thank You                           \n")
+        print("                           for                              \n")
+        print("                      using Jaggery                         \n")
+        print("____________________________________________________________\n")
+        print("           Bugs - +919497300461 - Samvram Sahu              \n")
+        print("************************************************************\n")
 
     def run_time(self):
         """
@@ -298,6 +324,7 @@ class GenericClient:
         :return: void
         """
         # Code for setting up a connection on server
+        self.welcome()
         main_server_socket = socket(AF_INET, SOCK_STREAM)
         main_server_socket.connect((self.server_ip, self.server_port))
         main_server_socket.send((json.dumps(self.mac_id)).encode())
@@ -316,6 +343,10 @@ class GenericClient:
         # Setting up transmit and receive sockets
         # transmit_socket = socket(AF_INET, SOCK_STREAM)
         receive_socket = socket(AF_INET, SOCK_STREAM)
+        receive_ip = input('Type your current IP you want reception on: ')
+        receive_port = int(input('What port you wanna receive on: '))
+        receive_socket.bind((receive_ip, receive_port))
+        print('$$ IP bound successfully\n')
 
         # Run a thread that looks for incoming connections and processes the commands that comes
         self.isrunning = True
@@ -331,4 +362,4 @@ class GenericClient:
 
         # transmit_socket.close()
         receive_socket.close()
-        print('Thank you for using Jaggery!\n')
+        self.aftermath()

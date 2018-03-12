@@ -97,7 +97,7 @@ Lets begin with a very basic concept, **When do you get a file?**. The answer is
 you **request** it and someone **accept** your request. We will follow a similar structure of 
 file transfer. 
 
-`$$ isonline [-all |  -p | -a] [<alias_name> | <ip_name>]`
+`$$ isonline [-all |  -ip | -a] [<alias_name> | <ip_name>]`
 
 This command can be used to check how many people are online.
 

@@ -9,7 +9,7 @@ class Server:
         self.BUFFERSIZE = 1024
         self.serverSoc = socket(AF_INET, SOCK_STREAM)
         self.port = port
-        self.serverSoc.bind(("172.20.113.57", self.port))
+        self.serverSoc.bind(("172.20.113.158", self.port))
         self.thread = []
         # self.createTable()
 

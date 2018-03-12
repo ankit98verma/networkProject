@@ -276,7 +276,7 @@ class GenericClient:
                 self.isrunning = False
                 break
             elif inp.split(' ')[0] == 'isonline':
-                if inp.split(' ')[1] == '-p':
+                if inp.split(' ')[1] == '-ip':
                     print('$$ Fetching status of %s \n'%inp.split(' ')[2])
                     self.server_query(main_server_socket, inp)
                 elif inp.split(' ')[1] == '-all':

@@ -239,7 +239,11 @@ class GenericClient:
         if reply[0] == 'yes':
             file_size = int(reply[1])
             print('Receiving FILE of Size '+str(file_size)+'\n')
-            with open(file_name, 'wb') as f:
+            root1 = Tk()
+            root1.filename = filedialog.asksaveasfilename(initialdir=os.path.expanduser('~/'), title='Save file')
+            file_path = root1.filename
+            root1.destroy()
+            with open(file_path, 'wb') as f:
                 data = sock.recv(self.BUFFERSIZE)
                 total_received = len(data)
                 f.write(data)

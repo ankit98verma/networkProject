@@ -347,8 +347,8 @@ class GenericClient:
         # Setting up transmit and receive sockets
         # transmit_socket = socket(AF_INET, SOCK_STREAM)
         receive_socket = socket(AF_INET, SOCK_STREAM)
-        receive_ip = input('Type your current IP you want reception on: ')
-        receive_port = int(input('What port you wanna receive on: '))
+        receive_ip = input('$$ Type your current IP you want reception on: ')
+        receive_port = int(input('$$ What port you wanna receive on: '))
         receive_socket.bind((receive_ip, receive_port))
         print('$$ IP bound successfully\n')
 
